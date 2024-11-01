@@ -246,9 +246,8 @@ Please format your response with clear headers and bullet points where appropria
         ]
         
         response = openai.chat.completions.create(
-            model="gpt-4-vision-preview",
-            messages=messages,
-            max_tokens=4000
+            model="gpt-4o",
+            messages=messages
         )
         
         return response.choices[0].message.content
