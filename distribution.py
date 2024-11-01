@@ -188,40 +188,67 @@ def plot_market_data(data, distribution_days, filename='sp500_analysis.png'):
 
     plt.close(fig)  # Close the figure to free up memory
 
-def get_ai_analysis(market_condition, technical_analysis, distribution_days):
+def get_enhanced_ai_analysis(market_condition, technical_analysis, distribution_days, chart_path):
     import os
     import openai
+    import base64
     
     try:
-        # Get API key from Windows environment variable
         openai.api_key = os.environ['OPENAI_API_KEY']
-    except KeyError:
-        return "OpenAI API key not found in Windows environment variables. Please set OPENAI_API_KEY in your system environment variables."
-    
-    try:
-        # Prepare the prompt
-        prompt = f"""
-        Analyze the following market data and provide strategic insights:
         
-        Market Condition: {market_condition}
-        Technical Analysis: {technical_analysis}
-        Number of Distribution Days: {len(distribution_days)}
+        # Convert image to base64
+        with open(chart_path, "rb") as image_file:
+            encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
         
-        Please provide:
-        1. A summary of current market conditions
-        2. Potential risks and opportunities
-        3. Key factors to monitor
-        Limit response to 3-4 concise paragraphs.
-        """
+        # Prepare detailed market analysis text
+        market_analysis = f"""
+Market Condition: {market_condition}
+Technical Analysis: {technical_analysis}
+Number of Distribution Days: {len(distribution_days)}
+
+Distribution Days Details:
+"""
+        for date, row in distribution_days.iterrows():
+            market_analysis += f"- {date.date()}: Close ${row['Close']:.2f}, Volume {row['Volume']:,}, Weighted Change {row['Weighted_Change']:.2f}%\n"
+        
+        messages = [
+            {
+                "role": "system",
+                "content": """You are a senior market analyst and portfolio manager with expertise in technical analysis 
+                and market psychology. Analyze the provided market data and chart to give comprehensive insights."""
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"""Please analyze this market data and the accompanying chart:
+
+{market_analysis}
+
+Provide a detailed analysis including:
+1. Overall Market Assessment
+2. Technical Analysis Interpretation
+3. Distribution Days Impact
+4. Risk Assessment
+5. Key Support/Resistance Levels
+6. Trading Volume Analysis
+7. Recommendations for Traders/Investors
+
+Please format your response with clear headers and bullet points where appropriate."""
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": f"data:image/png;base64,{encoded_image}"
+                    }
+                ]
+            }
+        ]
         
         response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Act as a Top Tier Stock Trader and Statistician with a PHD. Please review this market analyst and provide insights on market conditions and the investment. Explain your reasoning step by step."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=1500
+            model="gpt-4-vision-preview",
+            messages=messages,
+            max_tokens=4000
         )
         
         return response.choices[0].message.content

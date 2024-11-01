@@ -51,26 +51,49 @@ if st.button("Analyze"):
                     technical_analysis = analyze_technical_indicators(data)
                     st.write("Technical Analysis:", technical_analysis)
                     
-                    # Get AI Analysis
-                    with st.spinner("Getting AI-powered analysis..."):
-                        ai_analysis = get_ai_analysis(
-                            market_condition, 
-                            technical_analysis, 
-                            distribution_days
-                        )
-                        
-                    st.subheader("AI Market Analysis")
-                    st.write(ai_analysis)
-                    
-                    # Create and display plot
+                    # Create plot first for AI analysis
                     filename = get_unique_filename(symbol)
                     plot_market_data(data, distribution_days, filename)
                     
+                    # Display chart
                     st.image(filename, caption=f"{symbol} Analysis", use_column_width=True)
                     
-                    # Distribution days details
-                    st.subheader("Distribution Days Details")
-                    for date, row in distribution_days.iterrows():
-                        st.write(f"{date.date()}: Close ${row['Close']:.2f}, "
-                               f"Volume {row['Volume']:,}, "
-                               f"Weighted Change {row['Weighted_Change']:.2f}%")
+                    # Market Overview Section
+                    with st.expander("📊 Market Overview", expanded=True):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown("### Market Condition")
+                            st.write(market_condition)
+                        with col2:
+                            st.markdown("### Technical Analysis")
+                            st.write(technical_analysis)
+                    
+                    # Distribution Days Section
+                    with st.expander("📉 Distribution Days Details", expanded=False):
+                        st.dataframe(
+                            distribution_days[['Close', 'Volume', 'Weighted_Change']].style.format({
+                                'Close': '${:.2f}',
+                                'Volume': '{:,.0f}',
+                                'Weighted_Change': '{:.2f}%'
+                            })
+                        )
+                    
+                    # Get Enhanced AI Analysis
+                    with st.spinner("Getting AI-powered comprehensive analysis..."):
+                        ai_analysis = get_enhanced_ai_analysis(
+                            market_condition,
+                            technical_analysis,
+                            distribution_days,
+                            filename
+                        )
+                    
+                    # AI Analysis Section
+                    with st.expander("🤖 AI Market Analysis", expanded=True):
+                        sections = ai_analysis.split('\n\n')
+                        for section in sections:
+                            if section.strip():
+                                # Check if it's a header
+                                if section.strip().startswith('#'):
+                                    st.markdown(f"### {section.strip('#').strip()}")
+                                else:
+                                    st.write(section)
