@@ -192,11 +192,11 @@ def get_ai_analysis(market_condition, technical_analysis, distribution_days):
     import os
     import openai
     
-    # Get API key from environment variable
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-    
-    if not openai.api_key:
-        return "OpenAI API key not found in environment variables"
+    try:
+        # Get API key from Windows environment variable
+        openai.api_key = os.environ['OPENAI_API_KEY']
+    except KeyError:
+        return "OpenAI API key not found in Windows environment variables. Please set OPENAI_API_KEY in your system environment variables."
     
     try:
         # Prepare the prompt
