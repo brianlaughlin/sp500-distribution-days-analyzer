@@ -1,6 +1,6 @@
 # Stock Distribution Days Analyzer with AI Insights
 
-![Stock Analysis Dashboard](sp500_analysis.png)
+![Stock Analysis Dashboard](%5Egspc_analysis_20241031_223827.png)
 
 ## Overview
 
