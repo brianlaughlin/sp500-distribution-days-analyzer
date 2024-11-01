@@ -60,10 +60,10 @@ from datetime import datetime, timedelta
 from ta.trend import SMAIndicator
 from ta.momentum import RSIIndicator
 
-def fetch_sp500_data(days=400):
+def fetch_sp500_data(days=400, symbol="^GSPC"):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
-    ticker = yf.Ticker("^GSPC")
+    ticker = yf.Ticker(symbol)
     data = ticker.history(start=start_date, end=end_date)
     return data
 
@@ -128,7 +128,7 @@ def analyze_technical_indicators(data):
     
     return "\n".join(analysis)
 
-def plot_market_data(data, distribution_days):
+def plot_market_data(data, distribution_days, filename='sp500_analysis.png'):
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(16, 20), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1]})
 
     # Plot 1: Price and Moving Averages
@@ -161,8 +161,8 @@ def plot_market_data(data, distribution_days):
     fig.autofmt_xdate()  # Rotate and align the tick labels
     
     plt.tight_layout()
-    plt.savefig('sp500_analysis_weighted.png', dpi=300)
-    print("Chart saved as 'sp500_analysis_weighted.png'")
+    plt.savefig(filename, dpi=300)
+    print(f"Chart saved as '{filename}'")
 
     # Add a colorbar to show the scale of weighted changes
     norm = plt.Normalize(distribution_days['Weighted_Change'].min(), 0)
