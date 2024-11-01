@@ -35,6 +35,11 @@ if st.button("Analyze"):
                 # Perform analysis
                 with st.spinner("Fetching data and performing analysis..."):
                     data = fetch_sp500_data(symbol=symbol)
+                    
+                    if data.empty:
+                        st.error(f"No data available for {symbol}")
+                        return
+                        
                     distribution_days = identify_distribution_days(data)
                     data = add_technical_indicators(data)
                     

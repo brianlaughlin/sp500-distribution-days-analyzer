@@ -61,11 +61,17 @@ from ta.trend import SMAIndicator
 from ta.momentum import RSIIndicator
 
 def fetch_sp500_data(days=400, symbol="^GSPC"):
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days)
-    ticker = yf.Ticker(symbol)
-    data = ticker.history(start=start_date, end=end_date)
-    return data
+    try:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(start=start_date, end=end_date)
+        if data.empty:
+            print(f"No data available for {symbol}")
+        return data
+    except Exception as e:
+        print(f"Error fetching data for {symbol}: {str(e)}")
+        return pd.DataFrame()  # Return empty DataFrame on error
 
 def identify_distribution_days(data, threshold=-0.5):
     data['Prev_Close'] = data['Close'].shift(1)
@@ -107,10 +113,14 @@ def add_technical_indicators(data):
     return data
 
 def analyze_technical_indicators(data):
-    last_close = data['Close'].iloc[-1]
-    last_ma50 = data['MA50'].iloc[-1]
-    last_ma200 = data['MA200'].iloc[-1]
-    last_rsi = data['RSI'].iloc[-1]
+    if data.empty:
+        return "No data available for technical analysis"
+        
+    try:
+        last_close = data['Close'].iloc[-1]
+        last_ma50 = data['MA50'].iloc[-1]
+        last_ma200 = data['MA200'].iloc[-1]
+        last_rsi = data['RSI'].iloc[-1]
     
     analysis = []
     
