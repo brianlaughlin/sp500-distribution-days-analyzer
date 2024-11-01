@@ -1,18 +1,33 @@
-# S&P 500 Distribution Days Analyzer
+# Stock Distribution Days Analyzer with AI Insights
 
-![S&P 500 Analysis](sp500_analysis.png)
+![Stock Analysis Dashboard](sp500_analysis.png)
 
 ## Overview
 
-The **S&P 500 Distribution Days Analyzer** is a Python script that identifies and evaluates distribution days within the S&P 500 index, providing insights into potential market pressure using the Investor's Business Daily (IBD) methodology. This tool helps traders and investors gauge market conditions by analyzing historical data, calculating relevant metrics, and visualizing the results.
+The **Stock Distribution Days Analyzer** is a powerful web application that combines traditional technical analysis with cutting-edge AI to provide comprehensive market insights. Using the Investor's Business Daily (IBD) methodology enhanced with artificial intelligence, this tool helps traders and investors make more informed decisions by analyzing market conditions, identifying distribution days, and providing AI-powered market analysis.
 
-## Features
+## Key Features
 
-- **Fetch Historical Data**: Retrieves S&P 500 historical data from Yahoo Finance for a specified period.
-- **Identify Distribution Days**: Flags distribution days based on criteria such as lower closing prices and higher volumes compared to the previous trading day.
-- **Analyze Market Conditions**: Evaluates market health by counting and assessing the recency of distribution days.
-- **Technical Indicators**: Adds and analyzes 50-day and 200-day moving averages (MAs) and the Relative Strength Index (RSI) for deeper insight.
-- **Data Visualization**: Generates a plot showing S&P 500 performance with distribution days and technical indicators highlighted.
+- **Interactive Web Interface**: Built with Streamlit for a smooth, user-friendly experience
+- **Universal Stock Analysis**: Analyze any stock or index, not just S&P 500
+- **AI-Powered Market Analysis**: Get detailed AI insights including:
+  - Overall market assessment
+  - Technical analysis interpretation
+  - Distribution days impact
+  - Risk assessment
+  - Key support/resistance levels
+  - Trading volume analysis
+  - Strategic recommendations
+- **Advanced Technical Analysis**: 
+  - Distribution days identification
+  - Moving averages (50-day and 200-day)
+  - RSI (Relative Strength Index)
+  - Volume analysis
+- **Interactive Visualizations**: Dynamic charts showing:
+  - Price movements
+  - Distribution days
+  - Technical indicators
+  - Volume patterns
 
 ## Getting Started
 
@@ -55,30 +70,22 @@ pip install yfinance pandas matplotlib ta
 
 4. The output will include a summary of the identified distribution days, an analysis of market conditions, and a chart (`sp500_analysis.png`) visualizing the data.
 
-## Usage
+## Using the Application
 
-The script is designed to be a straightforward tool for analyzing S&P 500 market conditions. You can adjust the number of days to analyze by modifying the `days_to_analyze` variable in the `main()` function.
+1. Enter any stock symbol (e.g., AAPL, MSFT, ^GSPC for S&P 500)
+2. Click "Analyze" to start the analysis
+3. Explore the interactive results:
+   - Market Overview
+   - Technical Analysis
+   - Distribution Days Details
+   - AI Market Analysis with actionable insights
 
-### Example Output
-
-```
-Analyzing S&P 500 data for the last 400 trading days:
-Total trading days analyzed: 400
-Number of distribution days: 8
-
-Distribution Days:
-2024-07-01: Close $4400.75, Volume 4,200,000, Change -1.50%
-...
-
-Market Condition: Moderate distribution day count (8, 3 in last 10 days). Market showing weakness.
-
-Total decline on distribution days: -12.75%
-Average volume increase on distribution days: 10.32%
-
-Technical Indicator Analysis:
-Price is above both 50-day and 200-day MAs, indicating a strong uptrend.
-RSI is neutral at 54.32.
-```
+The AI analysis provides deep insights into:
+- Current market conditions and trends
+- Support and resistance levels
+- Volume patterns and significance
+- Risk assessment and market psychology
+- Strategic recommendations for traders/investors
 
 ## Features & Enhancements
 
