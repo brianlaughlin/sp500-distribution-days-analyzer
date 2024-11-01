@@ -239,14 +239,16 @@ Please format your response with clear headers and bullet points where appropria
                     },
                     {
                         "type": "image_url",
-                        "image_url": f"data:image/png;base64,{encoded_image}"
+                        "image_url": {
+                            "url": f"data:image/png;base64,{encoded_image}"
+                        }
                     }
                 ]
             }
         ]
         
         response = openai.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4-vision-preview",
             messages=messages
         )
         
