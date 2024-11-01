@@ -215,13 +215,13 @@ def get_ai_analysis(market_condition, technical_analysis, distribution_days):
         """
         
         response = openai.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a professional market analyst providing insights on market conditions."},
+                {"role": "system", "content": "Act as a Top Tier Stock Trader and Statistician with a PHD. Please review this market analyst and provide insights on market conditions and the investment. Explain your reasoning step by step."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=500
+            max_tokens=1500
         )
         
         return response.choices[0].message.content
