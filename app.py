@@ -19,9 +19,9 @@ def get_unique_filename(symbol):
 
 st.title("Stock Distribution Days Analyzer")
 
-# Stock symbol input
-symbol = st.text_input("Enter Stock Symbol (default: ^GSPC for S&P500)", value="^GSPC", 
-                      help="For S&P 500 index use '^GSPC', not 'S&P500'")
+# Stock symbol input with ^GSPC as default
+symbol = st.text_input("Enter Stock Symbol", value="^GSPC",
+                      help="Use ^GSPC for S&P 500 index")
 
 if st.button("Analyze"):
     if not symbol:
@@ -40,10 +40,10 @@ if st.button("Analyze"):
                         st.error(f"No data available for {symbol}")
                     else:
                         distribution_days = identify_distribution_days(data)
-                    data = add_technical_indicators(data)
-                    
-                    # Display results
-                    st.subheader("Analysis Results")
+                        data = add_technical_indicators(data)
+                        
+                        # Display results
+                        st.subheader("Analysis Results")
                     
                     market_condition = analyze_market_condition(distribution_days, len(data))
                     st.write("Market Condition:", market_condition)
