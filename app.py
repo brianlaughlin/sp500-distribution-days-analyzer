@@ -38,7 +38,7 @@ if st.button("Analyze"):
                     
                     if data.empty:
                         st.error(f"No data available for {symbol}")
-                        return
+                        continue
                         
                     distribution_days = identify_distribution_days(data)
                     data = add_technical_indicators(data)

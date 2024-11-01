@@ -121,6 +121,8 @@ def analyze_technical_indicators(data):
         last_ma50 = data['MA50'].iloc[-1]
         last_ma200 = data['MA200'].iloc[-1]
         last_rsi = data['RSI'].iloc[-1]
+    except Exception as e:
+        return f"Error analyzing technical indicators: {str(e)}"
     
     analysis = []
     
