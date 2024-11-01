@@ -1,6 +1,6 @@
 import streamlit as st
 import yfinance as yf
-from distribution import fetch_sp500_data, identify_distribution_days, analyze_market_condition, add_technical_indicators, analyze_technical_indicators, plot_market_data, get_ai_analysis
+from distribution import fetch_sp500_data, identify_distribution_days, analyze_market_condition, add_technical_indicators, analyze_technical_indicators, plot_market_data, get_enhanced_ai_analysis
 import os
 from datetime import datetime
 
