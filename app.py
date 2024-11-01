@@ -20,7 +20,8 @@ def get_unique_filename(symbol):
 st.title("Stock Distribution Days Analyzer")
 
 # Stock symbol input
-symbol = st.text_input("Enter Stock Symbol (default: ^GSPC for S&P500)", value="^GSPC")
+symbol = st.text_input("Enter Stock Symbol (default: ^GSPC for S&P500)", value="^GSPC", 
+                      help="For S&P 500 index use '^GSPC', not 'S&P500'")
 
 if st.button("Analyze"):
     if not symbol:

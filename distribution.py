@@ -85,7 +85,11 @@ def identify_distribution_days(data, threshold=-0.5):
 
 def analyze_market_condition(distribution_days, total_days):
     count = len(distribution_days)
-    recent_count = len(distribution_days.last('10D'))
+    # Get distribution days in the last 10 trading days
+    if not distribution_days.empty:
+        recent_count = len(distribution_days[distribution_days.index >= distribution_days.index[-1] - pd.Timedelta(days=10)])
+    else:
+        recent_count = 0
     
     total_weighted_change = distribution_days['Weighted_Change'].sum()
     
