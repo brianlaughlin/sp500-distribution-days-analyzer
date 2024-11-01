@@ -1,6 +1,6 @@
 import streamlit as st
 import yfinance as yf
-from distribution import fetch_sp500_data, identify_distribution_days, analyze_market_condition, add_technical_indicators, analyze_technical_indicators, plot_market_data
+from distribution import fetch_sp500_data, identify_distribution_days, analyze_market_condition, add_technical_indicators, analyze_technical_indicators, plot_market_data, get_ai_analysis
 import os
 from datetime import datetime
 
@@ -50,6 +50,17 @@ if st.button("Analyze"):
                     
                     technical_analysis = analyze_technical_indicators(data)
                     st.write("Technical Analysis:", technical_analysis)
+                    
+                    # Get AI Analysis
+                    with st.spinner("Getting AI-powered analysis..."):
+                        ai_analysis = get_ai_analysis(
+                            market_condition, 
+                            technical_analysis, 
+                            distribution_days
+                        )
+                        
+                    st.subheader("AI Market Analysis")
+                    st.write(ai_analysis)
                     
                     # Create and display plot
                     filename = get_unique_filename(symbol)

@@ -188,6 +188,47 @@ def plot_market_data(data, distribution_days, filename='sp500_analysis.png'):
 
     plt.close(fig)  # Close the figure to free up memory
 
+def get_ai_analysis(market_condition, technical_analysis, distribution_days):
+    import os
+    import openai
+    
+    # Get API key from environment variable
+    openai.api_key = os.getenv('OPENAI_API_KEY')
+    
+    if not openai.api_key:
+        return "OpenAI API key not found in environment variables"
+    
+    try:
+        # Prepare the prompt
+        prompt = f"""
+        Analyze the following market data and provide strategic insights:
+        
+        Market Condition: {market_condition}
+        Technical Analysis: {technical_analysis}
+        Number of Distribution Days: {len(distribution_days)}
+        
+        Please provide:
+        1. A summary of current market conditions
+        2. Potential risks and opportunities
+        3. Key factors to monitor
+        Limit response to 3-4 concise paragraphs.
+        """
+        
+        response = openai.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a professional market analyst providing insights on market conditions."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=500
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        return f"Error getting AI analysis: {str(e)}"
+
 def main():
     days_to_analyze = 400
     data = fetch_sp500_data(days_to_analyze)
