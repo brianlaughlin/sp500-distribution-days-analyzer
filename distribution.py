@@ -190,16 +190,16 @@ def plot_market_data(data, distribution_days, filename='sp500_analysis.png'):
 
 def get_enhanced_ai_analysis(market_condition, technical_analysis, distribution_days, chart_path):
     import os
-    import openai
+    from openai import OpenAI
     import base64
-    
+
     try:
-        openai.api_key = os.environ['OPENAI_API_KEY']
-        
+        client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+
         # Convert image to base64
         with open(chart_path, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
-        
+
         # Prepare detailed market analysis text
         market_analysis = f"""
 Market Condition: {market_condition}
@@ -210,19 +210,11 @@ Distribution Days Details:
 """
         for date, row in distribution_days.iterrows():
             market_analysis += f"- {date.date()}: Close ${row['Close']:.2f}, Volume {row['Volume']:,}, Weighted Change {row['Weighted_Change']:.2f}%\n"
-        
-        messages = [
-            {
-                "role": "system",
-                "content": """You are a senior market analyst and portfolio manager with expertise in technical analysis 
-                and market psychology. Analyze the provided market data and chart to give comprehensive insights."""
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"""Please analyze this market data and the accompanying chart:
+
+        # Construct prompt with system context integrated
+        prompt_text = f"""You are a senior market analyst and portfolio manager with expertise in technical analysis and market psychology. Analyze the provided market data and chart to give comprehensive insights.
+
+Please analyze this market data and the accompanying chart:
 
 {market_analysis}
 
@@ -236,24 +228,31 @@ Provide a detailed analysis including:
 7. Recommendations for Traders/Investors
 
 Please format your response with clear headers and bullet points where appropriate."""
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/png;base64,{encoded_image}"
+
+        response = client.responses.create(
+            model="gpt-5.1",
+            reasoning={
+                "effort": "medium"
+            },
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": prompt_text
+                        },
+                        {
+                            "type": "input_image",
+                            "image_url": f"data:image/png;base64,{encoded_image}"
                         }
-                    }
-                ]
-            }
-        ]
-        
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
+                    ]
+                }
+            ]
         )
-        
-        return response.choices[0].message.content
-        
+
+        return response.output_text
+
     except Exception as e:
         return f"Error getting AI analysis: {str(e)}"
 
