@@ -8,3 +8,5 @@ __pycache__/
 CLAUDE.md
 venv/
 .claude/
+.genkit
+.idea/
