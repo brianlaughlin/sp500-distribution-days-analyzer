@@ -9,7 +9,10 @@ The **Stock Distribution Days Analyzer** is a powerful web application that comb
 ## Key Features
 
 - **Interactive Web Interface**: Built with Streamlit for a smooth, user-friendly experience
-- **Market Breadth Dashboard**: Simultaneously analyze S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 to gauge overall market health.
+- **Three Analysis Modes**:
+  - **Single Symbol Analysis**: Deep-dive technical and distribution day analysis
+  - **Market Breadth Dashboard**: Simultaneously analyze S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 to gauge overall market health
+  - **Trend Guard Backtest**: Quantify drawdown reduction using 12-month trend-following strategy
 - **Universal Stock Analysis**: Analyze any stock or index, not just S&P 500
 - **Enhanced Distribution Day Rules**: Implements strict IBD expiration logic (25-day expiration or 5% price gain) for accurate pressure assessment.
 - **GPT-5.1 AI-Powered Market Analysis**: Get detailed AI insights with multi-step reasoning including:
@@ -102,9 +105,14 @@ The web interface will open in your browser. The CLI version will analyze the S&
 
 ## Using the Application
 
-1. Enter any stock symbol (e.g., AAPL, MSFT, ^GSPC for S&P 500)
-2. Click "Analyze" to start the analysis
-3. Explore the interactive results:
+The application offers three analysis modes accessible from the sidebar:
+
+### Mode 1: Single Symbol Analysis
+
+1. Select "Single Symbol Analysis" from the sidebar
+2. Enter any stock symbol (e.g., AAPL, MSFT, ^GSPC for S&P 500)
+3. Click "Analyze" to start the analysis
+4. Explore the interactive results:
    - Market Overview
    - Technical Analysis
    - Distribution Days Details
@@ -119,6 +127,41 @@ The **GPT-5.1 AI analysis** uses medium reasoning effort to provide deep insight
 
 The AI analyzes both the numerical data **and** the chart visualization for comprehensive understanding.
 
+### Mode 2: Market Breadth Dashboard
+
+1. Select "Market Breadth Dashboard" from the sidebar
+2. Click "Run Market Breadth Analysis"
+3. View simultaneous analysis of major indices:
+   - Market status for each index (Healthy/Moderate Pressure/High Pressure)
+   - Distribution day counts and recent activity
+   - Overall market consensus indicator
+
+### Mode 3: Trend Guard Backtest
+
+1. Select "Trend Guard Backtest" from the sidebar
+2. Enter one or more symbols (comma-separated or one per line):
+   - Single symbol: `EEM`
+   - Multiple symbols: `SPY, QQQ, EEM, IWM`
+3. Click "Analyze Trend Guard"
+4. Review the results:
+   - **Comparison Table**: If multiple symbols, see side-by-side performance metrics
+   - **Equity Curves**: Visual comparison of Buy & Hold vs Trend Guard strategy
+   - **Performance Metrics**: CAGR, Max Drawdown, Sharpe Ratio, Time Invested
+   - **AI Analysis**: GPT-5.1 interpretation of backtest results and strategy suitability
+
+**Understanding Trend Guard Results:**
+
+- **Drawdown Reduction**: Primary goal - how much capital preservation improved (e.g., 60% reduction means -60% drawdown reduced to -24%)
+- **CAGR Comparison**: What return (if any) was sacrificed for protection
+- **Time Invested**: Percentage of time in the market (remaining time in cash earning 3% annual yield)
+- **Sharpe Ratio**: Risk-adjusted returns - higher is better (typically 0.3-0.7 for equity strategies)
+
+**When to Use Trend Guard:**
+- Assets with strong trending behavior benefit most (volatile markets like emerging markets)
+- Most effective during prolonged bear markets (2008, 2020, etc.)
+- Less effective for steady uptrends or highly volatile/choppy markets
+- Best for investors prioritizing capital preservation over maximum returns
+
 ## Technology Stack
 
 - **AI Model**: OpenAI GPT-5.1 with Responses API (medium reasoning effort)
@@ -131,20 +174,27 @@ The AI analyzes both the numerical data **and** the chart visualization for comp
 ## Current Features
 
 ✅ **Volume-weighted distribution day analysis** (enhanced IBD methodology)
-✅ **Interactive Streamlit web interface**
+✅ **Interactive Streamlit web interface** with three analysis modes
 ✅ **GPT-5.1 AI analysis** with multi-step reasoning
 ✅ **Universal stock/index analysis** (any Yahoo Finance ticker)
+✅ **Market Breadth Dashboard** for simultaneous multi-index analysis
+✅ **Trend Guard Backtest** for quantifying drawdown reduction
 ✅ **Comprehensive technical indicators** (MA50, MA200, RSI)
 ✅ **Dynamic visualizations** with distribution day impact sizing
+✅ **Multi-symbol comparison** for trend-following performance
 
 ## Potential Future Enhancements
 
 1. **Real-Time Data Fetching**: Implement real-time data fetching for up-to-the-minute analysis
-2. **Multi-Index Comparison**: Side-by-side analysis of multiple indices (e.g., S&P 500 vs Nasdaq)
-3. **Backtesting Capabilities**: Evaluate the effectiveness of distribution day signals historically
-4. **Machine Learning**: Add predictive models for future market behavior based on historical patterns
-5. **Alerts**: Implement email or SMS alerts for significant market condition changes
-6. **Portfolio Integration**: Analyze multiple holdings and provide portfolio-level insights
+2. **Trend Guard Enhancements**:
+   - Customizable SMA periods (6M, 10M, 18M)
+   - Daily timeframe option (in addition to monthly)
+   - Portfolio-level backtest (apply strategy to multiple assets)
+   - Walk-forward analysis for robustness testing
+   - Export backtest results to CSV
+3. **Machine Learning**: Add predictive models for future market behavior based on historical patterns
+4. **Alerts**: Implement email or SMS alerts for significant market condition changes
+5. **Portfolio Integration**: Analyze multiple holdings and provide portfolio-level insights
 
 ## Contributing
 
@@ -188,9 +238,99 @@ GPT-5.1 with medium reasoning effort analyzes:
 
 This combination provides deeper insights than either data or visualization alone.
 
+## Trend Guard: Drawdown Reduction Strategy
+
+### What is Trend Guard?
+
+Trend Guard is a simple but effective trend-following strategy that aims to reduce portfolio drawdowns by moving to cash when an asset falls below its 12-month simple moving average. This systematic approach helps investors avoid prolonged bear markets while participating in uptrends.
+
+**Core Principle**: Stay invested when price > 12-month SMA; move to cash when price < 12-month SMA.
+
+### How It Works
+
+The backtest uses monthly data and a 12-month simple moving average (SMA):
+
+1. **Monthly Resampling**: Daily prices are converted to month-end prices
+2. **12-Month SMA Calculation**: Rolling 12-month average computed
+3. **Signal Generation**: At month-end, if price > SMA, stay invested; if price < SMA, move to cash
+4. **Position Delay**: Signal from month-end determines position for the *next* month (avoids look-ahead bias)
+5. **Cash Yield**: When out of the market, assumes 3% annual yield on cash
+
+### Key Metrics Explained
+
+- **CAGR (Compound Annual Growth Rate)**: Annualized return over the backtest period
+  - Buy & Hold CAGR: What you'd earn just holding the asset
+  - Strategy CAGR: What you'd earn using Trend Guard
+
+- **Max Drawdown**: Largest peak-to-trough decline
+  - Critical metric for capital preservation
+  - Example: -60% drawdown reduced to -24% = 60% reduction
+
+- **Sharpe Ratio**: Risk-adjusted returns (higher is better)
+  - Measures return per unit of risk
+  - Typical range: 0.3-0.7 for equity strategies
+  - >0.5 is generally considered good
+
+- **Time Invested**: Percentage of months in the market
+  - Lower percentage = more time in cash (safer but potentially lower returns)
+  - 60-75% is typical for trending assets
+
+### Example Results: Emerging Markets (EEM)
+
+```
+Period: 2004-12-31 to 2026-01-31 (254 months)
+
+Buy & Hold:
+  CAGR: 6.54%
+  Max Drawdown: -60.43%
+  Sharpe Ratio: 0.27
+
+Trend Guard Strategy:
+  CAGR: 7.59%
+  Max Drawdown: -24.10%
+  Sharpe Ratio: 0.39
+  Time Invested: 65.4%
+
+Improvement:
+  Drawdown Reduction: 60.1%
+  CAGR Increase: +1.05%
+  Sharpe Improvement: +45.7%
+```
+
+**Interpretation**: For EEM, Trend Guard achieved both higher returns AND significantly lower drawdowns - a rare win-win scenario typical of volatile, trending markets.
+
+### Best Use Cases
+
+**Assets that benefit most from Trend Guard:**
+- Volatile, trending markets (emerging markets, commodities)
+- Assets with historical prolonged bear markets
+- Investors prioritizing capital preservation
+
+**Assets that benefit less:**
+- Steady, low-volatility uptrends (bonds, utilities)
+- Highly mean-reverting markets (range-bound stocks)
+- Short-term traders (strategy uses monthly signals)
+
+### Standalone CLI Usage
+
+You can also run Trend Guard from the command line:
+
+```bash
+python trend_guard.py
+```
+
+This will analyze EEM by default and display results in the console, saving a chart to a PNG file.
+
 ## Disclaimer
 
-This tool enhances the IBD methodology but should not be used as the sole basis for investment decisions. The AI analysis is for informational purposes only and does not constitute financial advice. Always consult with a qualified financial advisor and use multiple analysis tools when making investment decisions. Past performance does not guarantee future results.
+This tool enhances the IBD methodology and provides backtested trend-following analysis but should not be used as the sole basis for investment decisions. The AI analysis and backtest results are for informational and educational purposes only and do not constitute financial advice.
+
+**Important Notes:**
+- Past performance does not guarantee future results
+- Backtests show historical performance under ideal conditions (no slippage, no transaction costs)
+- Real-world results may differ significantly from backtested results
+- Trend-following strategies can underperform during choppy, range-bound markets
+- Always consult with a qualified financial advisor and use multiple analysis tools when making investment decisions
 
 ## Author
 
