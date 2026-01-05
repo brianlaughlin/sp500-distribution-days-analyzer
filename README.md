@@ -9,7 +9,9 @@ The **Stock Distribution Days Analyzer** is a powerful web application that comb
 ## Key Features
 
 - **Interactive Web Interface**: Built with Streamlit for a smooth, user-friendly experience
+- **Market Breadth Dashboard**: Simultaneously analyze S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 to gauge overall market health.
 - **Universal Stock Analysis**: Analyze any stock or index, not just S&P 500
+- **Enhanced Distribution Day Rules**: Implements strict IBD expiration logic (25-day expiration or 5% price gain) for accurate pressure assessment.
 - **GPT-5.1 AI-Powered Market Analysis**: Get detailed AI insights with multi-step reasoning including:
   - Overall market assessment with chain-of-thought reasoning
   - Technical analysis interpretation
@@ -163,6 +165,12 @@ Weighted_Change = Percent_Change × (1 + Volume_Change)
 ```
 
 This formula amplifies price declines when accompanied by significant volume increases, making it more sensitive to institutional selling pressure.
+
+### Distribution Day Expiration Rules (New)
+
+To ensure the "Market Condition" reflects *current* reality, the system implements standard IBD expiration rules:
+- **Time Expiration**: A distribution day is removed from the count if it occurred more than **25 trading sessions** ago.
+- **Price Recovery**: A distribution day is removed if the index closes **5% or more** above the distribution day's closing price.
 
 ### Market Condition Assessment
 

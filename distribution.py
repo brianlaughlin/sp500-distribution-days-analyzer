@@ -89,22 +89,71 @@ def identify_distribution_days(data, threshold=-0.5):
     
     return distribution_days
 
-def analyze_market_condition(distribution_days, total_days):
-    count = len(distribution_days)
-    # Get distribution days in the last 10 trading days
-    if not distribution_days.empty:
-        recent_count = len(distribution_days[distribution_days.index >= distribution_days.index[-1] - pd.Timedelta(days=10)])
+def analyze_market_condition(distribution_days, current_data):
+    if current_data.empty:
+        return {
+            "status": "Unknown",
+            "color": "gray",
+            "description": "Insufficient data for analysis.",
+            "count": 0,
+            "recent_count": 0,
+            "weighted_change": 0
+        }
+
+    # 1. Filter by Expiration (25 Trading Days)
+    # We assume current_data is sorted by date.
+    # The "current" date is the last date in current_data.
+    last_date = current_data.index[-1]
+    
+    # We can't just use current_data.index[-25] because distribution_days is a subset.
+    # We need the date from 25 trading sessions ago.
+    if len(current_data) > 25:
+        cutoff_date = current_data.index[-25]
+    else:
+        cutoff_date = current_data.index[0] # Use all if less than 25 days
+
+    # Active by date
+    active_days = distribution_days[distribution_days.index >= cutoff_date]
+
+    # 2. Filter by Price Rise (5% Rule)
+    # A distribution day expires if the current price (last close) is > 5% above the dist day close.
+    current_close = current_data['Close'].iloc[-1]
+    
+    # Keep only those where current_close <= dist_day_close * 1.05
+    # (i.e. remove if current_close > dist_day_close * 1.05)
+    active_days = active_days[current_close <= active_days['Close'] * 1.05]
+
+    count = len(active_days)
+    
+    # Get distribution days in the last 10 trading days (subset of active_days)
+    if not active_days.empty:
+        cutoff_10d = current_data.index[-10] if len(current_data) > 10 else current_data.index[0]
+        recent_count = len(active_days[active_days.index >= cutoff_10d])
     else:
         recent_count = 0
     
-    total_weighted_change = distribution_days['Weighted_Change'].sum()
+    total_weighted_change = active_days['Weighted_Change'].sum()
     
+    result = {
+        "count": count,
+        "recent_count": recent_count,
+        "weighted_change": total_weighted_change,
+    }
+
     if count >= 6 or recent_count >= 4 or total_weighted_change < -10:
-        return f"High distribution day pressure (Count: {count}, Recent: {recent_count}, Weighted Change: {total_weighted_change:.2f}). Market may be under significant pressure."
+        result["status"] = "High Pressure"
+        result["color"] = "red"
+        result["description"] = f"High distribution day pressure (Count: {count}, Recent: {recent_count}, Weighted Change: {total_weighted_change:.2f}). Market may be under significant pressure."
     elif count >= 4 or recent_count >= 3 or total_weighted_change < -5:
-        return f"Moderate distribution day pressure (Count: {count}, Recent: {recent_count}, Weighted Change: {total_weighted_change:.2f}). Market showing weakness."
+        result["status"] = "Moderate Pressure"
+        result["color"] = "orange"
+        result["description"] = f"Moderate distribution day pressure (Count: {count}, Recent: {recent_count}, Weighted Change: {total_weighted_change:.2f}). Market showing weakness."
     else:
-        return f"Low distribution day pressure (Count: {count}, Recent: {recent_count}, Weighted Change: {total_weighted_change:.2f}). Market appears relatively healthy."
+        result["status"] = "Healthy"
+        result["color"] = "green"
+        result["description"] = f"Low distribution day pressure (Count: {count}, Recent: {recent_count}, Weighted Change: {total_weighted_change:.2f}). Market appears relatively healthy."
+    
+    return result
 
 def add_technical_indicators(data):
     data['MA50'] = SMAIndicator(close=data['Close'], window=50).sma_indicator()
@@ -270,8 +319,8 @@ def main():
     for date, row in distribution_days.iterrows():
         print(f"{date.date()}: Close ${row['Close']:.2f}, Volume {row['Volume']:,}, Weighted Change {row['Weighted_Change']:.2f}%")
     
-    market_condition = analyze_market_condition(distribution_days, len(data))
-    print(f"\nMarket Condition: {market_condition}")
+    market_condition = analyze_market_condition(distribution_days, data)
+    print(f"\nMarket Condition: {market_condition['description']}")
     
     total_weighted_change = distribution_days['Weighted_Change'].sum()
     print(f"\nTotal weighted change on distribution days: {total_weighted_change:.2f}")
