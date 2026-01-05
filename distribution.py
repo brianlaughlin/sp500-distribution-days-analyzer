@@ -1,6 +1,4 @@
 """
-https://claude.ai/chat/e81cfe23-589d-4d0f-aeb8-482e73105443
-
 S&P 500 Distribution Days Analyzer
 
 This script analyzes the S&P 500 index to identify and evaluate distribution days,

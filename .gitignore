@@ -10,3 +10,6 @@ venv/
 .claude/
 .genkit
 .idea/
+history/
+docs/
+GEMINI.md
