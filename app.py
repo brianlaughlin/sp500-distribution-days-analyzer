@@ -66,7 +66,7 @@ if mode == "Single Symbol Analysis":
                         
                         # Create plot first for AI analysis
                         filename = get_unique_filename(symbol)
-                        plot_market_data(data, distribution_days, filename)
+                        plot_market_data(data, distribution_days, filename, symbol=symbol)
                         
                         # Display chart
                         st.image(filename, caption=f"{symbol} Analysis", use_column_width=True)
