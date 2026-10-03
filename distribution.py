@@ -191,11 +191,21 @@ def analyze_technical_indicators(data):
     
     return "\n".join(analysis)
 
-def plot_market_data(data, distribution_days, filename='sp500_analysis.png', follow_through_days=None):
+def plot_market_data(data, distribution_days, filename='sp500_analysis.png', follow_through_days=None, symbol='^GSPC'):
+    # Resolve display name for the symbol
+    symbol_names = {
+        '^GSPC': 'S&P 500',
+        '^DJI': 'Dow Jones',
+        '^IXIC': 'Nasdaq Composite',
+        '^NDX': 'Nasdaq 100',
+        '^RUT': 'Russell 2000',
+    }
+    display_name = symbol_names.get(symbol, symbol)
+
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(16, 20), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1]})
 
     # Plot 1: Price and Moving Averages
-    ax1.plot(data.index, data['Close'], label='S&P 500 Close', color='blue', linewidth=2)
+    ax1.plot(data.index, data['Close'], label=f'{display_name} Close', color='blue', linewidth=2)
     ax1.plot(data.index, data['MA50'], label='50-day MA', color='orange', linestyle='--', alpha=0.8)
     ax1.plot(data.index, data['MA200'], label='200-day MA', color='green', linestyle='-.', alpha=0.8)
 
@@ -212,7 +222,7 @@ def plot_market_data(data, distribution_days, filename='sp500_analysis.png', fol
     
     ax1.set_ylabel('Closing Price', fontsize=12)
     ax1.legend(fontsize=10, loc='upper left')
-    ax1.set_title('S&P 500 Performance with Volume-Weighted Distribution Days', fontsize=16)
+    ax1.set_title(f'{display_name} Performance with Volume-Weighted Distribution Days', fontsize=16)
 
     # Plot 2: Volume
     ax2.bar(data.index, data['Volume'], color='gray', alpha=0.3, label='Volume')
