@@ -191,18 +191,24 @@ def analyze_technical_indicators(data):
     
     return "\n".join(analysis)
 
-def plot_market_data(data, distribution_days, filename='sp500_analysis.png'):
+def plot_market_data(data, distribution_days, filename='sp500_analysis.png', follow_through_days=None):
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(16, 20), sharex=True, gridspec_kw={'height_ratios': [3, 1, 1]})
 
     # Plot 1: Price and Moving Averages
     ax1.plot(data.index, data['Close'], label='S&P 500 Close', color='blue', linewidth=2)
     ax1.plot(data.index, data['MA50'], label='50-day MA', color='orange', linestyle='--', alpha=0.8)
     ax1.plot(data.index, data['MA200'], label='200-day MA', color='green', linestyle='-.', alpha=0.8)
-    
+
     # Scatter plot for distribution days, size based on weighted change
     sizes = -distribution_days['Weighted_Change'] * 20  # Adjust multiplier for desired point sizes
-    scatter = ax1.scatter(distribution_days.index, distribution_days['Close'], 
+    scatter = ax1.scatter(distribution_days.index, distribution_days['Close'],
                           s=sizes, color='red', alpha=0.6, label='Distribution Days')
+
+    # Follow-through days: green triangles mark confirmed new uptrends
+    if follow_through_days is not None and not follow_through_days.empty:
+        ax1.scatter(follow_through_days.index, follow_through_days['Close'],
+                    s=160, color='green', marker='^', alpha=0.95,
+                    label='Follow-Through Days', zorder=5, edgecolors='darkgreen')
     
     ax1.set_ylabel('Closing Price', fontsize=12)
     ax1.legend(fontsize=10, loc='upper left')

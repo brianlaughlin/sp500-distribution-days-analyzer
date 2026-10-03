@@ -9,10 +9,11 @@ The **Stock Distribution Days Analyzer** is a powerful web application that comb
 ## Key Features
 
 - **Interactive Web Interface**: Built with Streamlit for a smooth, user-friendly experience
-- **Three Analysis Modes**:
-  - **Single Symbol Analysis**: Deep-dive technical and distribution day analysis
+- **Four Analysis Modes**:
+  - **Single Symbol Analysis**: Deep-dive technical and distribution day analysis, now with follow-through day detection and a concrete exposure recommendation
   - **Market Breadth Dashboard**: Simultaneously analyze S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 to gauge overall market health
   - **Trend Guard Backtest**: Quantify drawdown reduction using 12-month trend-following strategy
+  - **Signal Edge Backtest** (new): Replays the Exposure Planner day-by-day over history to prove what the app's advice would have done, plus an event study of every High Pressure onset
 - **Universal Stock Analysis**: Analyze any stock or index, not just S&P 500
 - **Enhanced Distribution Day Rules**: Implements strict IBD expiration logic (25-day expiration or 5% price gain) for accurate pressure assessment.
 - **GPT-5.1 AI-Powered Market Analysis**: Get detailed AI insights with multi-step reasoning including:
@@ -105,7 +106,7 @@ The web interface will open in your browser. The CLI version will analyze the S&
 
 ## Using the Application
 
-The application offers three analysis modes accessible from the sidebar:
+The application offers four analysis modes accessible from the sidebar:
 
 ### Mode 1: Single Symbol Analysis
 
@@ -162,6 +163,17 @@ The AI analyzes both the numerical data **and** the chart visualization for comp
 - Less effective for steady uptrends or highly volatile/choppy markets
 - Best for investors prioritizing capital preservation over maximum returns
 
+### Mode 4: Signal Edge Backtest
+
+1. Select "Signal Edge Backtest" from the sidebar
+2. Enter a symbol (default `^GSPC`) and choose the history to test (5, 10, or 20 years)
+3. Click "Run Signal Backtest"
+4. Review:
+   - **Strategy vs Buy & Hold**: CAGR, max drawdown, Sharpe, and average exposure
+   - **Event Study**: forward returns after every High Pressure onset vs. baseline
+   - **Equity chart**: the ladder's equity curve with the recommended exposure history below it
+   - **Backtest rules**: the exact ladder being tested (expandable)
+
 ## Technology Stack
 
 - **AI Model**: OpenAI GPT-5.1 with Responses API (medium reasoning effort)
@@ -174,7 +186,10 @@ The AI analyzes both the numerical data **and** the chart visualization for comp
 ## Current Features
 
 ✅ **Volume-weighted distribution day analysis** (enhanced IBD methodology)
-✅ **Interactive Streamlit web interface** with three analysis modes
+✅ **Follow-through day detection** (the IBD buy signal - rally attempts, confirmation windows, failed attempts)
+✅ **Exposure Planner** (systematic 0-100% equity recommendation from trend + pressure + timing)
+✅ **Signal Edge Backtest** (event study + historical replay of the Exposure Planner)
+✅ **Interactive Streamlit web interface** with four analysis modes
 ✅ **GPT-5.1 AI analysis** with multi-step reasoning
 ✅ **Universal stock/index analysis** (any Yahoo Finance ticker)
 ✅ **Market Breadth Dashboard** for simultaneous multi-index analysis
@@ -320,6 +335,52 @@ python trend_guard.py
 ```
 
 This will analyze EEM by default and display results in the console, saving a chart to a PNG file.
+
+## Market Timing System: Follow-Through Days, Exposure Planner, Signal Backtest
+
+Distribution days tell you when to get **out**. The Market Timing System completes the methodology with when to get **back in**, how much to hold, and proof it works. All three live in `market_timing.py`.
+
+### 1. Follow-Through Day Detection (the buy signal)
+
+In IBD methodology, the follow-through day is the confirmation that a new uptrend has begun - and the flip side of distribution days:
+
+- **Rally attempt**: begins with Day 1, the first up-close day after the index makes a new 20-session closing low.
+- **Follow-through day**: a 1.25%+ gain on higher volume occurring on **day 4-7** of the rally attempt (days 8-10 flagged as weaker "late" confirmations).
+- **Failed attempt**: the rally dies if price undercuts the Day-1 low before confirmation, or (once confirmed) undercuts the follow-through day's low or closes back below the 50-day MA.
+
+The Single Symbol Analysis now marks follow-through days as green triangles on the price chart and reports the live timing state: confirmed uptrend, rally attempt in progress (with days remaining in the confirmation window), or market in correction.
+
+### 2. Exposure Planner (position sizing)
+
+Turns "moderate pressure" into an actionable number: a recommended equity exposure from 0-100%. The ladder is **primary-trend first** (200-day MA regime, the standard bull/bear divider), with distribution pressure modulating inside each regime - and it never fights the primary trend with full size:
+
+| Condition | Exposure |
+|---|---|
+| Fresh follow-through (≤5 sessions) + above 200-day MA | **100%** |
+| Rally attempt in progress (unconfirmed) | **50%** |
+| Above 200-day MA + Healthy / Moderate / High pressure | **100% / 80% / 60%** |
+| Below 200-day MA + Healthy / Moderate / High pressure | **50% / 30% / 10%** |
+
+Every recommendation shows its auditable factors, so you always know *why*.
+
+### 3. Signal Edge Backtest (proof)
+
+The new **Signal Edge Backtest** mode answers "does this actually make money?" two ways:
+
+1. **Exposure-ladder replay**: runs the Exposure Planner day-by-day over history (strictly no look-ahead - each day's position is set at that day's close) vs. buy & hold, with equity curves and the exposure history charted.
+2. **Event study**: forward 21/63/126-session returns after every High Pressure onset vs. the unconditional baseline.
+
+**Validated on SPY, 2004-2026 (22 years, dividends/splits adjusted):**
+
+| | Ladder | Buy & Hold |
+|---|---|---|
+| CAGR | 7.67% | 10.90% |
+| Max drawdown | **-21.8%** | -55.2% |
+| Sharpe ratio | 0.49 | 0.49 |
+| 2008 calendar year | **-8.5%** | -36.2% |
+| Avg exposure | 70% | 100% |
+
+The honest trade: it gives up about a third of the long-term return to cut drawdowns by ~60% with identical risk-adjusted returns. The real payoff is behavioral - most investors panic-sell near the bottom of a -55% drawdown and never recover; a system that keeps the pain at -22% keeps them invested.
 
 ## Disclaimer
 
