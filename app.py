@@ -3,6 +3,7 @@ import yfinance as yf
 import pandas as pd
 from distribution import fetch_sp500_data, identify_distribution_days, analyze_market_condition, add_technical_indicators, analyze_technical_indicators, plot_market_data, get_enhanced_ai_analysis
 from trend_guard import fetch_trend_guard_data, calculate_trend_guard_backtest, plot_trend_guard_results, get_trend_guard_ai_analysis
+from market_timing import identify_follow_through_days, recommend_exposure, backtest_distribution_timing, plot_signal_backtest
 import os
 from datetime import datetime
 
@@ -24,7 +25,7 @@ def get_unique_filename(symbol):
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
-mode = st.sidebar.radio("Select Analysis Mode", ["Single Symbol Analysis", "Market Breadth Dashboard", "Trend Guard Backtest"])
+mode = st.sidebar.radio("Select Analysis Mode", ["Single Symbol Analysis", "Market Breadth Dashboard", "Trend Guard Backtest", "Signal Edge Backtest"])
 
 st.title("Stock Distribution Days Analyzer")
 
@@ -45,15 +46,18 @@ if mode == "Single Symbol Analysis":
                     # Perform analysis
                     with st.spinner("Fetching data and performing analysis..."):
                         data = fetch_sp500_data(symbol=symbol)
-                        
+
                         if data.empty:
                             st.error(f"No data available for {symbol}")
-                        else:
-                            distribution_days = identify_distribution_days(data)
-                            data = add_technical_indicators(data)
-                            
-                            # Display results
-                            st.subheader("Analysis Results")
+                            st.stop()
+
+                        distribution_days = identify_distribution_days(data)
+                        data = add_technical_indicators(data)
+                        timing = identify_follow_through_days(data)
+                        follow_through_days = timing['follow_through_days']
+
+                        # Display results
+                        st.subheader("Analysis Results")
                         
                         # Note: analyze_market_condition now returns a dict
                         market_condition_data = analyze_market_condition(distribution_days, data)
@@ -66,7 +70,9 @@ if mode == "Single Symbol Analysis":
                         
                         # Create plot first for AI analysis
                         filename = get_unique_filename(symbol)
-                        plot_market_data(data, distribution_days, filename)
+                        plot_market_data(data, distribution_days, filename,
+                                         follow_through_days=follow_through_days,
+                                         symbol=symbol)
                         
                         # Display chart
                         st.image(filename, caption=f"{symbol} Analysis", use_column_width=True)
@@ -90,6 +96,33 @@ if mode == "Single Symbol Analysis":
                                     'Weighted_Change': '{:.2f}%'
                                 })
                             )
+
+                        # Follow-Through Day Section (the buy signal)
+                        with st.expander("🚀 Follow-Through Day Status", expanded=True):
+                            st.write(timing['status']['summary'])
+                            if not follow_through_days.empty:
+                                st.dataframe(
+                                    follow_through_days[['Close', 'Volume', 'Pct_Change', 'Rally_Day', 'Late']].style.format({
+                                        'Close': '${:.2f}',
+                                        'Volume': '{:,.0f}',
+                                        'Pct_Change': '{:.2f}%'
+                                    })
+                                )
+                            else:
+                                st.write("No follow-through days in the analysis window.")
+                            if timing['status']['failed_attempts']:
+                                st.caption(f"Failed rally attempts in window: {timing['status']['failed_attempts']}")
+
+                        # Exposure Planner Section (position sizing)
+                        with st.expander("💰 Exposure Planner", expanded=True):
+                            plan = recommend_exposure(market_condition_data, data, timing['status'])
+                            pcol1, pcol2 = st.columns(2)
+                            with pcol1:
+                                st.metric("Recommended Equity Exposure", f"{plan['exposure_pct']}%")
+                            with pcol2:
+                                st.metric("Risk Posture", plan['rating'])
+                            st.write(plan['summary'])
+                            st.dataframe(pd.DataFrame(plan['factors']), use_container_width=True)
                         
                         # Get Enhanced AI Analysis
                         with st.spinner("Getting AI-powered comprehensive analysis..."):
@@ -354,3 +387,90 @@ elif mode == "Trend Guard Backtest":
                     # Individual symbol details
                     for item in results_list:
                         display_trend_guard_detail(item)
+elif mode == "Signal Edge Backtest":
+    st.subheader("Signal Edge Backtest")
+    st.markdown(
+        "Does the app's own advice actually make money? This replays the "
+        "**Exposure Planner ladder** day-by-day over history (no look-ahead: "
+        "each day's position is the exposure recommended at that day's close), "
+        "plus an event study of forward returns after every **High Pressure** onset."
+    )
+
+    symbol = st.text_input("Enter Stock Symbol", value="^GSPC", key="edge_symbol",
+                           help="Use ^GSPC for S&P 500 index")
+    lookback = st.selectbox("History to test", ["5 years", "10 years", "20 years"], index=1)
+
+    if st.button("Run Signal Backtest"):
+        if not symbol:
+            st.error("Please enter a stock symbol")
+        else:
+            symbol = symbol.upper()
+            with st.spinner(f"Validating {symbol}..."):
+                if not validate_ticker(symbol):
+                    st.error(f"Invalid stock symbol: {symbol}")
+                else:
+                    with st.spinner("Fetching data and running backtest..."):
+                        days = {"5 years": 1300, "10 years": 2600, "20 years": 5200}[lookback]
+                        data = fetch_sp500_data(days=days, symbol=symbol)
+                        if data.empty or len(data) < 60:
+                            st.error(f"Not enough data for {symbol}")
+                            st.stop()
+                        dist_days = identify_distribution_days(data)
+                        if dist_days.empty:
+                            st.warning("No distribution days found in this period - cannot run the signal backtest.")
+                            st.stop()
+                        results = backtest_distribution_timing(data, dist_days)
+                        m = results['metrics']
+
+                        st.subheader("Strategy vs Buy & Hold")
+                        c1, c2, c3, c4 = st.columns(4)
+                        with c1:
+                            st.metric("CAGR (Strategy)", f"{m['cagr_strategy']:.2%}",
+                                      f"{m['cagr_strategy'] - m['cagr_buy_hold']:+.2%} vs B&H")
+                            st.metric("CAGR (Buy & Hold)", f"{m['cagr_buy_hold']:.2%}")
+                        with c2:
+                            st.metric("Max DD (Strategy)", f"{m['max_dd_strategy']:.2%}",
+                                      f"{m['max_dd_strategy'] - m['max_dd_buy_hold']:+.2%} vs B&H")
+                            st.metric("Max DD (Buy & Hold)", f"{m['max_dd_buy_hold']:.2%}")
+                        with c3:
+                            st.metric("Sharpe (Strategy)", f"{m['sharpe_strategy']:.2f}",
+                                      f"{m['sharpe_strategy'] - m['sharpe_buy_hold']:+.2f} vs B&H")
+                            st.metric("Sharpe (Buy & Hold)", f"{m['sharpe_buy_hold']:.2f}")
+                        with c4:
+                            st.metric("Avg Exposure", f"{m['avg_exposure_pct']:.0f}%")
+                            st.metric("Min Exposure", f"{m['min_exposure_pct']:.0f}%")
+
+                        st.subheader("Event Study: forward returns after High Pressure onsets")
+                        st.markdown(f"**{results['n_onsets']}** High Pressure onsets from "
+                                    f"{m['start_date']} to {m['end_date']}. "
+                                    f"Hit rate = share of onsets followed by negative returns.")
+                        if not results['event_study'].empty:
+                            st.dataframe(
+                                results['event_study'].style.format({
+                                    'Hit rate (fwd < 0)': '{:.1%}',
+                                    'Avg fwd return (events)': '{:.2%}',
+                                    'Avg fwd return (baseline)': '{:.2%}',
+                                    'Excess return': '{:+.2%}',
+                                }),
+                                use_container_width=True
+                            )
+                        else:
+                            st.write("Not enough history for the event study.")
+
+                        filename = get_unique_filename(f"{symbol}_signal_edge")
+                        plot_signal_backtest(results, symbol, filename)
+                        st.image(filename, caption=f"{symbol} Signal Backtest", use_column_width=True)
+
+                        with st.expander("📏 Backtest rules", expanded=False):
+                            st.write(
+                                "Each day's position equals the Exposure Planner's recommended "
+                                "equity exposure computed at that day's close (no look-ahead):\n"
+                                "- **Fresh follow-through** (<=5 sessions, uptrend intact): 100%\n"
+                                "- **Rally attempt in progress**: 50%\n"
+                                "- **Above 50-day MA**: 100% / 75% / 50% by pressure "
+                                "(Healthy / Moderate / High)\n"
+                                "- **Below 50-day MA**: 50% / 30% / 10% by pressure "
+                                "(capital preservation)\n"
+                                "- **Cash** earns 3% annually. No transaction costs or slippage "
+                                "are modeled - real results would be slightly worse."
+                            )
