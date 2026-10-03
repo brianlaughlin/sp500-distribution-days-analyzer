@@ -9,11 +9,14 @@ The **Stock Distribution Days Analyzer** is a powerful web application that comb
 ## Key Features
 
 - **Interactive Web Interface**: Built with Streamlit for a smooth, user-friendly experience
-- **Four Analysis Modes**:
+- **Seven Analysis Modes**:
   - **Single Symbol Analysis**: Deep-dive technical and distribution day analysis, now with follow-through day detection and a concrete exposure recommendation
   - **Market Breadth Dashboard**: Simultaneously analyze S&P 500, Nasdaq 100, Dow Jones, and Russell 2000 to gauge overall market health
   - **Trend Guard Backtest**: Quantify drawdown reduction using 12-month trend-following strategy
   - **Signal Edge Backtest** (new): Replays the Exposure Planner day-by-day over history to prove what the app's advice would have done, plus an event study of every High Pressure onset
+  - **Leadership Scanner**: Rank a watchlist against SPY (or another benchmark), with trend filters and volume-confirmed breakout checks
+  - **Risk-Budget Trade Planner**: Calculate whole shares, ATR stops, and reward/risk targets within cash, exposure, and portfolio-risk limits
+  - **Rotation Backtest**: Replay monthly momentum allocation with next-session execution, modeled trading costs, and a chronological holdout scorecard
 - **Universal Stock Analysis**: Analyze any stock or index, not just S&P 500
 - **Enhanced Distribution Day Rules**: Implements strict IBD expiration logic (25-day expiration or 5% price gain) for accurate pressure assessment.
 - **GPT-5.1 AI-Powered Market Analysis**: Get detailed AI insights with multi-step reasoning including:
@@ -106,7 +109,7 @@ The web interface will open in your browser. The CLI version will analyze the S&
 
 ## Using the Application
 
-The application offers four analysis modes accessible from the sidebar:
+The application offers seven analysis modes accessible from the sidebar:
 
 ### Mode 1: Single Symbol Analysis
 
@@ -174,6 +177,88 @@ The AI analyzes both the numerical data **and** the chart visualization for comp
    - **Equity chart**: the ladder's equity curve with the recommended exposure history below it
    - **Backtest rules**: the exact ladder being tested (expandable)
 
+### Mode 5: Leadership Scanner
+
+1. Enter a stock/ETF watchlist and exactly one relative-strength benchmark ticker (default SPY).
+2. Click **Scan leaders**. Review the ranked table and any skipped symbols.
+3. Export the results to CSV or enter a candidate's ticker in the trade planner.
+
+An eligible leader has positive 63- and 126-session returns, outperforms the
+benchmark at both horizons, and closes above its 200-session SMA. The score is
+the average excess return, not a probability of profit. A breakout flag requires
+a close above the prior 20 closes and volume at least 1.5 times the prior
+20-session average. Breakout flags do not change eligibility or ranking.
+Stale histories, gaps in the latest 201 benchmark sessions, and insufficient
+history are reported rather than forward-filled.
+
+### Mode 6: Risk-Budget Trade Planner
+
+Enter account equity, available cash, invested value, existing open risk at stops,
+and your risk limits. **Build trade plan** returns a reference entry, a stop based
+on twice the simple 14-session average true range (customizable), a reward/risk
+target, and a whole-share quantity. Share count is the smallest allowed by:
+
+- Per-trade risk and the remaining total portfolio stop-risk budget.
+- Available cash.
+- Remaining equity-exposure room, optionally capped by the existing market
+  Exposure Planner using a market proxy such as SPY.
+
+When enabled, the guard requires exactly one market-proxy ticker and rejects
+history more than **7 calendar days** behind the trade's reference date. This
+tolerance accommodates weekends and holiday closures; stale data stops the plan,
+without silently bypassing the guard. Results disclose both reference dates.
+
+The table identifies the binding constraint; an exhausted budget produces **zero
+shares**, not a forced trade. A target is arithmetic, not a forecast. Stop orders
+can fill below their stop price, and gaps, costs, and correlated losses can exceed
+the planned loss. Account inputs are session-only and are not sent to an AI model;
+the optional downloaded CSV contains the plan, so keep it private.
+
+### Mode 7: Rotation Backtest
+
+Choose an asset universe before inspecting results (default SPY, QQQ, IWM, EFA,
+EEM, GLD), a history window, allocation slots, assumed cash yield, and one-way
+cost/slippage in basis points. Click **Run rotation backtest**.
+
+- At month-end, rank average 63/126-session returns. Require both returns positive
+  and price above the 200-session SMA.
+- Select up to the slot count, allocating `1 / slots` per asset. Unused slots stay
+  in cash. Holdings drift between rebalances; there is no free daily rebalancing.
+- Execute at the **next session close**. The execution session earns the old
+  holdings' return, so a signal cannot profit from its own day's move.
+- Costs use pre-fee portfolio-weight turnover: pre-fee NAV times the sum of
+  absolute target-minus-drifted asset weights times the selected cost rate.
+  Targets apply to post-fee NAV; this convention is not exact executed-dollar accounting.
+  Equal-weight buy & hold pays an initial purchase cost and then holds the same
+  universe. Final holdings are marked to market without an exit liquidation fee.
+- Show full-period, earlier-period, and later 30% holdout CAGR, drawdown, Sharpe,
+  and total return. Export metrics, equity/weights, and the execution ledger.
+  Sessions count elapsed returns, not the initial valuation. Full/earlier CAGR
+  includes the benchmark entry cost over those intervals; total return and drawdown
+  retain it too. Sharpe excludes the initial valuation and is zero for near-zero
+  daily volatility. Holdout includes its first return from the preceding session.
+
+These are fixed rules, not an optimizer. The holdout is a chronological diagnostic,
+not independent evidence after repeated tuning. User-selected surviving assets
+introduce selection/survivorship bias; common-session intersection may shorten
+history. Missing requested symbols fail the backtest rather than silently changing
+the universe. Taxes, delisted assets, liquidity limits, and costs beyond the
+chosen assumption are not modeled. The UI explicitly notes when holdout CAGR
+fails to beat buy & hold.
+
+**Why these three:** the existing timing system addresses broad market exposure.
+The scanner adds opportunity selection, the trade planner adds individual-trade
+loss budgeting, and the rotation backtest checks a portfolio rule after costs.
+None guarantees higher returns, and a lower drawdown can come at the expense of
+lower returns. All three run without an OpenAI key or paid AI calls, use adjusted
+Yahoo daily bars excluding today's potentially incomplete session, cache market
+data for 15 minutes, and keep results available through CSV-download reruns.
+
+**Deterministic feature checks:** install `pytest` in your development environment,
+then run `python -m pytest test_capital_tools.py test_capital_ui.py test_market_timing.py -q`.
+The UI tests exercise the actual Streamlit routes with mocked market downloads;
+synthetic fixtures validate logic, not profitability.
+
 ## Technology Stack
 
 - **AI Model**: OpenAI GPT-5.1 with Responses API (medium reasoning effort)
@@ -189,7 +274,10 @@ The AI analyzes both the numerical data **and** the chart visualization for comp
 ✅ **Follow-through day detection** (the IBD buy signal - rally attempts, confirmation windows, failed attempts)
 ✅ **Exposure Planner** (systematic 0-100% equity recommendation from trend + pressure + timing)
 ✅ **Signal Edge Backtest** (event study + historical replay of the Exposure Planner)
-✅ **Interactive Streamlit web interface** with four analysis modes
+✅ **Interactive Streamlit web interface** with seven analysis modes
+✅ **Leadership Scanner** with benchmark-relative momentum and breakout checks
+✅ **Risk-Budget Trade Planner** with ATR stops, whole-share sizing, and portfolio limits
+✅ **Rotation Backtest** with next-session execution, modeled costs, and holdout reporting
 ✅ **GPT-5.1 AI analysis** with multi-step reasoning
 ✅ **Universal stock/index analysis** (any Yahoo Finance ticker)
 ✅ **Market Breadth Dashboard** for simultaneous multi-index analysis
@@ -388,7 +476,7 @@ This tool enhances the IBD methodology and provides backtested trend-following a
 
 **Important Notes:**
 - Past performance does not guarantee future results
-- Backtests show historical performance under ideal conditions (no slippage, no transaction costs)
+- Trend Guard and Signal Edge omit trading costs; Rotation Backtest models the selected cost/slippage assumption but still omits taxes and other real-world frictions
 - Real-world results may differ significantly from backtested results
 - Trend-following strategies can underperform during choppy, range-bound markets
 - Always consult with a qualified financial advisor and use multiple analysis tools when making investment decisions

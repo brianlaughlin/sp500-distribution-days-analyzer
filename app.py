@@ -4,6 +4,7 @@ import pandas as pd
 from distribution import fetch_sp500_data, identify_distribution_days, analyze_market_condition, add_technical_indicators, analyze_technical_indicators, plot_market_data, get_enhanced_ai_analysis
 from trend_guard import fetch_trend_guard_data, calculate_trend_guard_backtest, plot_trend_guard_results, get_trend_guard_ai_analysis
 from market_timing import identify_follow_through_days, recommend_exposure, backtest_distribution_timing, plot_signal_backtest
+from capital_ui import CAPITAL_MODES, render_capital_mode
 import os
 from datetime import datetime
 
@@ -25,11 +26,13 @@ def get_unique_filename(symbol):
 
 # Sidebar Navigation
 st.sidebar.title("Navigation")
-mode = st.sidebar.radio("Select Analysis Mode", ["Single Symbol Analysis", "Market Breadth Dashboard", "Trend Guard Backtest", "Signal Edge Backtest"])
+mode = st.sidebar.radio("Select Analysis Mode", ["Single Symbol Analysis", "Market Breadth Dashboard", "Trend Guard Backtest", "Signal Edge Backtest"] + CAPITAL_MODES)
 
 st.title("Stock Distribution Days Analyzer")
 
-if mode == "Single Symbol Analysis":
+if mode in CAPITAL_MODES:
+    render_capital_mode(mode)
+elif mode == "Single Symbol Analysis":
     # Stock symbol input with ^GSPC as default
     symbol = st.text_input("Enter Stock Symbol", value="^GSPC",
                           help="Use ^GSPC for S&P 500 index")
